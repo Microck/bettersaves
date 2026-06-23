@@ -1,0 +1,16 @@
+obj/
+bin/
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.svg
+AGENTS.md
+design.md
+ideate-*.md
+.external/everest-release/*.zip
+.external/everest-release/main/
+lib-stripped/
+.residue/
+.workflow/
+.facts

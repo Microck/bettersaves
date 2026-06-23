@@ -1,0 +1,6 @@
+- Name: BetterSaves
+  Version: 0.1.0
+  DLL: bin/BetterSaves.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.4449.0

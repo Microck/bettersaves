@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>BetterSaves</AssemblyName>
+    <RootNamespace>Celeste.Mod.BetterSaves</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <CelestePrefix Condition="'$(CelestePrefix)' == ''">lib-stripped</CelestePrefix>
+    <ZippedFiles>everest.yaml;bin/BetterSaves.dll;bin/BetterSaves.pdb;bin/BetterSaves.deps.json;Dialog/**/*.*</ZippedFiles>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <PackageReference PrivateAssets="all" ExcludeAssets="runtime" />
+    <Reference Private="false" />
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CelesteAnalyzer" Version="1.0.3.1" />
+    <PackageReference Include="CelesteMod.Publicizer" Version="1.1.2" CelesteAssembly="$(CelestePrefix)/Celeste.dll" />
+    <Reference Include="$(CelestePrefix)/Celeste.dll" Private="false" />
+    <Reference Include="$(CelestePrefix)/FNA.dll" Private="false" />
+    <Reference Include="$(CelestePrefix)/MMHOOK_Celeste.dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CopyFiles" AfterTargets="Build">
+    <ItemGroup>
+      <BuildOutput Include="$(OutputPath)**/*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BuildOutput)" DestinationFiles="@(BuildOutput->'bin/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="Package" AfterTargets="Build" DependsOnTargets="CopyFiles">
+    <ItemGroup>
+      <FilesToPackage Include="$(ZippedFiles)" />
+    </ItemGroup>
+    <PackageMod Files="@(FilesToPackage)" OutputPath="BetterSaves.zip" />
+  </Target>
+
+  <UsingTask TaskName="PackageMod" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <Files ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true" />
+      <OutputPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.IO.Compression" />
+      <Code Type="Fragment" Language="cs">
+      <![CDATA[
+        if (File.Exists(OutputPath)) {
+            File.Delete(OutputPath);
+        }
+
+        using ZipArchive zip = ZipFile.Open(OutputPath, ZipArchiveMode.Create);
+        foreach (var file in Files) {
+            string filePath = file.GetMetadata("FullPath");
+            if (!File.Exists(filePath)) {
+                continue;
+            }
+
+            Uri projectUri = new Uri(@"$(MSBuildProjectDirectory)/");
+            Uri fileUri = new Uri(filePath);
+            string entryName = Uri.UnescapeDataString(projectUri.MakeRelativeUri(fileUri).ToString());
+            entryName = entryName.Replace(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            zip.CreateEntryFromFile(filePath, entryName);
+        }
+      ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>
