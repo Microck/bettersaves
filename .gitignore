@@ -2,6 +2,9 @@ obj/
 bin/
 *.zip
 *.png
+!docs/
+!docs/images/
+!docs/images/bettersaves-cover.png
 *.jpg
 *.jpeg
 *.svg
